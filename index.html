@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JTMK PTSS Lecturer Status Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;background:#f0f2f5;color:#1f2328;font-size:14px;line-height:1.6}
+
+/* ── LOGIN ── */
+#loginPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e3a5f 0%,#152d4a 100%)}
+.login-box{background:#fff;border-radius:16px;padding:36px 32px;width:360px;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+.login-logo{text-align:center;margin-bottom:20px}
+.login-logo h2{font-size:18px;font-weight:700;color:#1e3a5f;margin-top:8px}
+.login-logo p{font-size:11px;color:#57606a;margin-top:2px}
+.login-box label{font-size:12px;font-weight:600;color:#57606a;display:block;margin-bottom:4px;margin-top:14px}
+.login-box input,.login-box select{width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;background:#f7f8fa}
+.login-box input:focus,.login-box select:focus{border-color:#3b82d4;background:#fff}
+.btn-login{width:100%;margin-top:20px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-login:hover{background:#2a4f7a}
+.login-err{color:#dc2626;font-size:12px;margin-top:10px;text-align:center;min-height:18px}
+
+/* ── SHELL ── */
+#appPage{display:none}
+header{background:#1e3a5f;color:#fff;padding:0 20px;height:56px;display:flex;align-items:center;gap:14px;position:fixed;top:0;left:0;right:0;z-index:100}
+.menu-toggle{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 6px;line-height:1;flex-shrink:0}
+header .title-block h1{font-size:15px;font-weight:700}
+header .title-block p{font-size:10px;opacity:.7}
+header .date-badge{margin-left:auto;font-size:11px;opacity:.8;text-align:right}
+.user-chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+.user-chip:hover{background:rgba(255,255,255,.2)}
+.role-badge{font-size:10px;background:#3b82d4;padding:1px 7px;border-radius:10px;font-weight:700}
+
+.app-shell{display:flex;margin-top:56px;min-height:calc(100vh - 56px)}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;background:#152d4a;color:#c9d6e3;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:56px;bottom:0;left:0;transition:transform .25s;z-index:90;overflow-y:auto}
+.sidebar.collapsed{transform:translateX(-220px)}
+.sidebar-logo{padding:18px 20px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#7a95b0;border-bottom:1px solid #1e3a5f}
+.nav-group{padding:10px 0 4px}
+.nav-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#4e6a84;padding:0 20px 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:#c9d6e3;cursor:pointer;border-left:3px solid transparent;transition:background .15s,color .15s;user-select:none}
+.nav-item:hover{background:#1e3a5f;color:#fff}
+.nav-item.active{background:#1e3a5f;color:#fff;border-left-color:#3b82d4;font-weight:600}
+.nav-item .nav-icon{font-size:15px;flex-shrink:0}
+
+/* ── CONTENT ── */
+.content{margin-left:220px;flex:1;transition:margin-left .25s;min-width:0}
+.content.full{margin-left:0}
+.page{display:none}
+.page.active{display:block}
+.main{padding:20px 24px 40px}
+
+/* ── SUMMARY CARDS ── */
+.summary-bar{display:flex;gap:14px;padding:20px 24px 0;flex-wrap:wrap}
+.summary-card{flex:1;min-width:120px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.summary-card .icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.icon-total{background:#eff6ff}.icon-class{background:#dcfce7}.icon-out{background:#fef9c3}.icon-leave{background:#fee2e2}.icon-available{background:#f0f9ff}.icon-wbh{background:#f5f0ff}
+.summary-card .count{font-size:24px;font-weight:700;line-height:1}
+.summary-card .label{font-size:11px;color:#57606a;margin-top:2px}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.section-header h2{font-size:15px;font-weight:600}
+.last-updated{font-size:12px;color:#57606a}
+
+/* ── PROGRAMME TABS ── */
+.prog-tabs{display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:18px}
+.prog-tab{padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;color:#57606a;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s}
+.prog-tab.active{color:#1e3a5f;border-bottom-color:#3b82d4}
+.prog-tab:hover{color:#1e3a5f}
+
+/* ── TABLE ── */
+.table-wrap{background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead{background:#f7f8fa}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#57606a;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e5e7eb}
+tbody tr{border-bottom:1px solid #f0f2f5;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#fafbfc}
+tbody td{padding:11px 14px;vertical-align:middle}
+.lecturer-no{width:34px;height:34px;border-radius:50%;background:#eff6ff;color:#3b82d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.lecturer-info{display:flex;align-items:center;gap:10px}
+.lecturer-name{font-weight:600;font-size:13px}
+.lecturer-id{font-size:11px;color:#57606a}
+
+/* ── STATUS BADGE ── */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.badge-class{background:#dcfce7;color:#15803d}.badge-class .status-dot{background:#16a34a}
+.badge-out{background:#fef9c3;color:#a16207}.badge-out .status-dot{background:#ca8a04}
+.badge-leave{background:#fee2e2;color:#b91c1c}.badge-leave .status-dot{background:#dc2626}
+.badge-available{background:#f0f9ff;color:#0369a1}.badge-available .status-dot{background:#0284c7}
+.badge-wbh{background:#f5f0ff;color:#7c3aed}.badge-wbh .status-dot{background:#7c3aed}
+
+/* ── SELECT / INPUT ── */
+select{appearance:none;background:#f7f8fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2357606a'/%3E%3C/svg%3E") no-repeat right 9px center;border:1px solid #e5e7eb;border-radius:6px;padding:5px 26px 5px 9px;font-size:12px;color:#1f2328;cursor:pointer;min-width:130px;font-family:inherit}
+select:focus{outline:none;border-color:#3b82d4;box-shadow:0 0 0 2px rgba(59,130,212,.15)}
+.note-cell input{border:1px solid #e5e7eb;border-radius:6px;padding:5px 9px;font-size:12px;color:#1f2328;width:100%;min-width:140px;font-family:inherit;background:#f7f8fa}
+.note-cell input:focus{outline:none;border-color:#3b82d4;background:#fff}
+.note-cell input::placeholder{color:#adb5bd}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background .15s}
+.btn-primary{background:#1e3a5f;color:#fff}.btn-primary:hover{background:#2a4f7a}
+.btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#15803d}
+.btn-danger{background:#dc2626;color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-warning{background:#ca8a04;color:#fff}.btn-warning:hover{background:#a16207}
+.btn-ghost{background:none;border:1px solid #e5e7eb;color:#57606a}.btn-ghost:hover{background:#f7f8fa}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:28px;width:420px;max-width:95vw;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:18px;color:#1f2328}
+.modal label{font-size:12px;font-weight:600;color:#57606a;display:block;margin-bottom:4px;margin-top:12px}
+.modal input,.modal select{width:100%;border:1px solid #e5e7eb;border-radius:7px;padding:8px 11px;font-size:13px;font-family:inherit;outline:none;background:#f7f8fa}
+.modal input:focus,.modal select:focus{border-color:#3b82d4;background:#fff}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* ── ANNOUNCEMENTS ── */
+.announce-section{padding:16px 24px 0}
+.announce-panel{background:#fff;border:1px solid #e5e7eb;border-left:4px solid #3b82d4;border-radius:10px;padding:14px 18px}
+.announce-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.announce-header h3{font-size:13px;font-weight:700;color:#1f2328;display:flex;align-items:center;gap:7px}
+.btn-add-ann{background:#3b82d4;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-add-ann:hover{background:#2563b0}
+.ann-list{display:flex;flex-direction:column;gap:7px}
+.ann-item{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:9px 12px;display:flex;align-items:flex-start;gap:10px}
+.ann-item .ann-body{flex:1}
+.ann-item .ann-text{font-size:13px;color:#1f2328}
+.ann-item .ann-meta{font-size:11px;color:#57606a;margin-top:2px}
+.ann-item .btn-del{background:none;border:none;cursor:pointer;color:#adb5bd;font-size:16px;line-height:1;padding:0 2px;flex-shrink:0}
+.ann-item .btn-del:hover{color:#dc2626}
+.ann-empty{font-size:13px;color:#adb5bd;font-style:italic}
+.ann-form{display:none;margin-top:10px;gap:8px;align-items:center;flex-wrap:wrap}
+.ann-form.open{display:flex}
+.ann-form textarea{flex:1;min-width:200px;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:13px;color:#1f2328;font-family:inherit;resize:vertical;min-height:36px;background:#f7f8fa}
+.ann-form textarea:focus{outline:none;border-color:#3b82d4;background:#fff}
+.ann-form .btn-post{background:#16a34a;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.ann-form .btn-post:hover{background:#15803d}
+.ann-form .btn-cancel{background:none;border:1px solid #e5e7eb;border-radius:6px;padding:7px 12px;font-size:13px;color:#57606a;cursor:pointer;font-family:inherit}
+.ann-form .btn-cancel:hover{background:#f7f8fa}
+
+/* ── CONTENT ROW (table+chart) ── */
+.content-row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.table-col{flex:1;min-width:0}
+.chart-col{width:260px;flex-shrink:0;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px 16px}
+.chart-col h3{font-size:13px;font-weight:700;color:#1f2328;margin-bottom:14px;text-align:center}
+.pie-wrap{display:flex;justify-content:center;margin-bottom:14px}
+.pie-legend{display:flex;flex-direction:column;gap:7px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#1f2328}
+.pie-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pie-legend-label{flex:1}
+.pie-legend-val{font-weight:700;color:#1f2328}
+.pie-legend-pct{color:#57606a;font-size:11px}
+
+/* ── ABOUT ── */
+.about-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:28px;max-width:600px}
+.about-card h2{font-size:17px;font-weight:700;margin-bottom:8px}
+.about-card p{font-size:13px;color:#57606a;margin-bottom:6px}
+.info-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.info-chip{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:8px 14px;font-size:12px;color:#1f2328}
+.info-chip span{font-weight:700}
+
+/* ── OVERLAY / CHATBOT / FOOTER ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:89}
+.overlay.show{display:block}
+footer{text-align:center;padding:14px;font-size:12px;color:#57606a;border-top:1px solid #e5e7eb;background:#fff}
+#chatBtn{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:#1e3a5f;color:#fff;border:none;font-size:22px;cursor:pointer;z-index:200;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:background .2s,transform .15s}
+#chatBtn:hover{background:#2a4f7a;transform:scale(1.07)}
+#chatPanel{position:fixed;bottom:88px;right:24px;width:320px;max-height:460px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:200;overflow:hidden;transform:scale(.92) translateY(12px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#chatPanel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+.chat-header{background:#1e3a5f;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.chat-header .chat-avatar{width:32px;height:32px;border-radius:50%;background:#3b82d4;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-header .chat-title{font-size:13px;font-weight:700}
+.chat-header .chat-sub{font-size:11px;opacity:.7}
+.chat-close{margin-left:auto;background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;align-items:flex-end}
+.msg.user{flex-direction:row-reverse}
+.msg-bubble{max-width:220px;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.45;word-break:break-word}
+.msg.bot .msg-bubble{background:#f0f2f5;color:#1f2328;border-bottom-left-radius:4px}
+.msg.user .msg-bubble{background:#1e3a5f;color:#fff;border-bottom-right-radius:4px}
+.msg-avatar{width:26px;height:26px;border-radius:50%;background:#3b82d4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px}
+.qr-btn{background:#f0f2f5;border:1px solid #e5e7eb;border-radius:16px;padding:5px 12px;font-size:12px;color:#1f2328;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s}
+.qr-btn:hover{background:#e5e7eb}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #f0f2f5}
+#chatInput{flex:1;border:1px solid #e5e7eb;border-radius:20px;padding:7px 14px;font-size:13px;color:#1f2328;font-family:inherit;outline:none;background:#f7f8fa}
+#chatInput:focus{border-color:#3b82d4;background:#fff}
+#chatSend{background:#1e3a5f;color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#chatSend:hover{background:#2a4f7a}
+
+/* ── TASK CARDS ── */
+.task-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:0}
+.task-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.task-card-avatar{width:42px;height:42px;border-radius:50%;background:#eff6ff;color:#3b82d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.task-card-name{font-weight:700;font-size:13px;color:#1f2328}
+.task-card-sub{font-size:11px;color:#57606a}
+.task-list{display:flex;flex-direction:column;gap:6px;min-height:32px}
+.task-item{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:7px;font-size:12px;color:#1f2328}
+.task-item-num{width:18px;height:18px;border-radius:50%;background:#3b82d4;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.task-item-text{flex:1;line-height:1.4}
+.task-empty{font-size:12px;color:#adb5bd;font-style:italic;padding:4px 0}
+.task-card-footer{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid #f0f2f5}
+
+@media(max-width:760px){
+  .sidebar{transform:translateX(-220px)}
+  .sidebar.open{transform:translateX(0)}
+  .content{margin-left:0!important}
+  .chart-col{width:100%}
+  thead th:nth-child(4),tbody td:nth-child(4){display:none}
+  .summary-card .count{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN PAGE ══ -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="jtmk.png" alt="JTMK Logo" style="width:80px;height:80px;object-fit:contain"/>
+      <h2>JTMK PTSS Lecturer Status Dashboard</h2>
+      <p>Politeknik Tuanku Syed Sirajuddin</p>
+    </div>
+    <label>Username</label>
+    <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off"/>
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Enter password"/>
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-login" id="btnLogin">Login</button>
+  </div>
+</div>
+
+<!-- ══ APP PAGE ══ -->
+<div id="appPage">
+<header>
+  <button class="menu-toggle" id="menuToggle">&#9776;</button>
+  <img src="jtmk.png" alt="JTMK" style="height:38px;width:38px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex-shrink:0"/>
+  <div class="title-block">
+    <h1>JTMK PTSS Lecturer Status Dashboard</h1>
+    <p>Jabatan Teknologi Maklumat &amp; Komunikasi — Politeknik Tuanku Syed Sirajuddin</p>
+  </div>
+  <div class="date-badge" id="dateDisplay"></div>
+  <div class="user-chip" id="userChip" title="Click to logout">
+    <span id="userChipName">—</span>
+    <span class="role-badge" id="userChipRole">—</span>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">JTMK PTSS</div>
+    <div class="nav-group">
+      <div class="nav-label">Main</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span> Dashboard</div>
+      <div class="nav-item" data-page="sad"><span class="nav-icon">💻</span> SAD Lecturers</div>
+      <div class="nav-item" data-page="ns"><span class="nav-icon">🌐</span> NS Lecturers</div>
+      <div class="nav-item" data-page="tasks"><span class="nav-icon">📋</span> Tugas Sampingan</div>
+      <div class="nav-item" data-page="announcements"><span class="nav-icon">📢</span> Announcements</div>
+      <div class="nav-item" data-page="chart"><span class="nav-icon">📊</span> Status Chart</div>
+    </div>
+    <div class="nav-group admin-only" style="display:none">
+      <div class="nav-label">Reports</div>
+      <div class="nav-item" data-page="print"><span class="nav-icon">🖨️</span> Print Report</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Info</div>
+      <div class="nav-item" data-page="about"><span class="nav-icon">ℹ️</span> About</div>
+    </div>
+  </nav>
+
+  <div class="content" id="mainContent">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="summary-bar">
+        <div class="summary-card"><div class="icon icon-total">🏫</div><div><div class="count" id="totalCount">0</div><div class="label">Total Lecturers</div></div></div>
+        <div class="summary-card"><div class="icon icon-class">📚</div><div><div class="count" id="classCount">0</div><div class="label">In Class</div></div></div>
+        <div class="summary-card"><div class="icon icon-out">✈️</div><div><div class="count" id="outstationCount">0</div><div class="label">Outstation</div></div></div>
+        <div class="summary-card"><div class="icon icon-leave">🏖️</div><div><div class="count" id="leaveCount">0</div><div class="label">On Leave</div></div></div>
+        <div class="summary-card"><div class="icon icon-available">💼</div><div><div class="count" id="availableCount">0</div><div class="label">Available</div></div></div>
+        <div class="summary-card"><div class="icon icon-wbh">🏠</div><div><div class="count" id="wbhCount">0</div><div class="label">WBH</div></div></div>
+      </div>
+      <div class="announce-section">
+        <div class="announce-panel">
+          <div class="announce-header">
+            <h3>📢 Announcements</h3>
+            <button class="btn-add-ann admin-only" id="btnToggleAnn" style="display:none">+ Add</button>
+          </div>
+          <form class="ann-form" id="annForm">
+            <textarea id="annInput" placeholder="Type announcement…" rows="2"></textarea>
+            <button type="submit" class="btn-post">Post</button>
+            <button type="button" class="btn-cancel" id="btnAnnCancel">Cancel</button>
+          </form>
+          <div class="ann-list" id="annList"><span class="ann-empty" id="annEmpty">No announcements yet.</span></div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="section-header">
+          <h2>All Lecturers</h2>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="last-updated" id="lastUpdated">—</span>
+            <button class="btn btn-primary admin-only" id="btnAddDash" style="display:none">+ Add Lecturer</button>
+          </div>
+        </div>
+        <div class="content-row">
+          <div class="table-col">
+            <div class="prog-tabs">
+              <div class="prog-tab active" data-prog="all">All</div>
+              <div class="prog-tab" data-prog="SAD">💻 SAD</div>
+              <div class="prog-tab" data-prog="NS">🌐 NS</div>
+            </div>
+            <div class="table-wrap">
+              <table><thead><tr><th>#</th><th>Lecturer</th><th>Programme</th><th>Status</th><th>Remarks</th><th id="actHead"></th></tr></thead>
+              <tbody id="dashTableBody"></tbody></table>
+            </div>
+          </div>
+          <div class="chart-col">
+            <h3>Status Distribution</h3>
+            <div class="pie-wrap"><svg id="pieChart" width="180" height="180" viewBox="0 0 180 180"></svg></div>
+            <div class="pie-legend" id="pieLegend"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SAD PAGE ══ -->
+    <div class="page" id="page-sad">
+      <div class="main">
+        <div class="section-header">
+          <h2>💻 Software &amp; Application Development (SAD)</h2>
+          <button class="btn btn-primary admin-only" id="btnAddSAD" style="display:none">+ Add Lecturer</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>Lecturer</th><th>Status</th><th>Remarks</th><th id="sadActHead"></th></tr></thead>
+          <tbody id="sadTableBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NS PAGE ══ -->
+    <div class="page" id="page-ns">
+      <div class="main">
+        <div class="section-header">
+          <h2>🌐 Networking System (NS)</h2>
+          <button class="btn btn-primary admin-only" id="btnAddNS" style="display:none">+ Add Lecturer</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>Lecturer</th><th>Status</th><th>Remarks</th><th id="nsActHead"></th></tr></thead>
+          <tbody id="nsTableBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANNOUNCEMENTS PAGE ══ -->
+    <div class="page" id="page-announcements">
+      <div class="main">
+        <div class="section-header">
+          <h2>📢 Announcements</h2>
+          <button class="btn-add-ann admin-only" id="btnToggleAnn2" style="display:none">+ Add</button>
+        </div>
+        <div class="announce-panel" style="border-radius:10px">
+          <form class="ann-form" id="annForm2">
+            <textarea id="annInput2" placeholder="Type announcement…" rows="2"></textarea>
+            <button type="submit" class="btn-post">Post</button>
+            <button type="button" class="btn-cancel" id="btnAnnCancel2">Cancel</button>
+          </form>
+          <div class="ann-list" id="annList2" style="margin-top:10px"><span class="ann-empty" id="annEmpty2">No announcements yet.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHART PAGE ══ -->
+    <div class="page" id="page-chart">
+      <div class="main">
+        <div class="section-header"><h2>📊 Status Chart</h2></div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:28px;flex:1;min-width:260px;text-align:center">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:20px">Status Distribution — All Lecturers</h3>
+            <div style="display:flex;justify-content:center;margin-bottom:20px"><svg id="pieChartLarge" width="240" height="240" viewBox="0 0 240 240"></svg></div>
+            <div class="pie-legend" id="pieLegendLarge" style="max-width:240px;margin:0 auto"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:28px;flex:1;min-width:260px">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:16px">Count Breakdown</h3>
+            <div id="barBreakdown" style="display:flex;flex-direction:column;gap:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TUGAS SAMPINGAN PAGE ══ -->
+    <div class="page" id="page-tasks">
+      <div class="main">
+        <div class="section-header">
+          <h2>📋 Tugas Sampingan</h2>
+          <span style="font-size:12px;color:#57606a">Up to 5 tasks per lecturer. Admin can add, edit and delete.</span>
+        </div>
+        <div id="tasksGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+      </div>
+    </div>
+
+    <!-- ══ PRINT PAGE ══ -->
+    <div class="page" id="page-print">
+      <div class="main">
+        <div class="section-header">
+          <h2>🖨️ Print Report</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btnPrintStatus">🖨️ Print Status Report</button>
+            <button class="btn btn-success" id="btnPrintTasks">🖨️ Print Tugas Sampingan</button>
+            <button class="btn btn-warning" id="btnPrintAll">🖨️ Print Both</button>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:20px;font-size:13px;color:#57606a">
+          <p>Select a report type above to open the print preview. Use your browser's <b>Print</b> dialog (Ctrl+P / Cmd+P) to save as PDF.</p>
+          <p style="margin-top:8px">Reports include institution header, date generated, and all lecturer data.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ABOUT PAGE ══ -->
+    <div class="page" id="page-about">
+      <div class="main">
+        <div class="section-header"><h2>ℹ️ About</h2></div>
+        <div class="about-card">
+          <h2>JTMK PTSS Lecturer Status Dashboard</h2>
+          <p>Status tracking for JTMK lecturers across two programmes — Software &amp; Application Development (SAD) and Networking System (NS).</p>
+          <p>Admins can manage all lecturers and announcements. Lecturers can update their own status only.</p>
+          <div class="info-row">
+            <div class="info-chip">Department: <span>JTMK</span></div>
+            <div class="info-chip">Institution: <span>PTSS</span></div>
+            <div class="info-chip">Programmes: <span>SAD &amp; NS</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>Developed by NZMG</footer>
+  </div>
+</div>
+</div><!-- /appPage -->
+
+<!-- ══ LECTURER MODAL ══ -->
+<div class="modal-overlay" id="lecturerModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add Lecturer</h3>
+    <label>Full Name</label>
+    <input type="text" id="mName" placeholder="e.g. Pn. Norlia Binti Hassin"/>
+    <label>Staff ID</label>
+    <input type="text" id="mStaffId" placeholder="e.g. PTSS-JTMK-011"/>
+    <label>Username (login)</label>
+    <input type="text" id="mUsername" placeholder="e.g. norlia"/>
+    <label>Password</label>
+    <input type="password" id="mPassword" placeholder="Min 4 characters"/>
+    <label>Programme</label>
+    <select id="mProg"><option value="SAD">💻 SAD — Software &amp; Application Development</option><option value="NS">🌐 NS — Networking System</option></select>
+    <label>Status</label>
+    <select id="mStatus">
+      <option value="available">💼 Available</option>
+      <option value="wbh">🏠 WBH</option>
+      <option value="class">📚 In Class</option>
+      <option value="outstation">✈️ Outstation</option>
+      <option value="leave">🏖️ On Leave</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE MODAL ══ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="width:340px">
+    <h3>Delete Lecturer</h3>
+    <p style="font-size:13px;color:#57606a;margin-top:4px">Are you sure you want to delete <b id="confirmName"></b>? This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnConfirmCancel">Cancel</button>
+      <button class="btn btn-danger" id="btnConfirmDelete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TASK MODAL ══ -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal" style="width:460px">
+    <h3 id="taskModalTitle">Tugas Sampingan</h3>
+    <p id="taskModalLecName" style="font-size:13px;color:#57606a;margin-bottom:4px"></p>
+    <div id="taskFields"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnTaskCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnTaskSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHATBOT ══ -->
+<button id="chatBtn" title="JTMK Assistant">💬</button>
+<div id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-avatar">🤖</div>
+    <div><div class="chat-title">JTMK Assistant</div><div class="chat-sub">Ask me about lecturers</div></div>
+    <button class="chat-close" id="chatClose">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="quick-replies" id="quickReplies"></div>
+  <div class="chat-input-row">
+    <input id="chatInput" type="text" placeholder="Type a question…" autocomplete="off"/>
+    <button id="chatSend">➤</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   API LAYER
+══════════════════════════════════ */
+const API = "http://localhost:8000/api";
+let authToken = null;
+
+async function apiFetch(path, opts={}){
+  const res = await fetch(API+path, {
+    headers: {"Content-Type":"application/json", ...(authToken?{"Authorization":"Bearer "+authToken}:{})},
+    ...opts
+  });
+  return res.json();
+}
+
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+let lecturers = [];
+let announcements = [];
+let tasks = {};
+let nextId = 1;
+
+const STATUS_META = {
+  class:      {label:"In Class",   cls:"badge-class",     color:"#16a34a"},
+  outstation: {label:"Outstation", cls:"badge-out",       color:"#ca8a04"},
+  leave:      {label:"On Leave",   cls:"badge-leave",     color:"#dc2626"},
+  available:  {label:"Available",  cls:"badge-available", color:"#0284c7"},
+  wbh:        {label:"WBH",        cls:"badge-wbh",       color:"#7c3aed"},
+};
+
+/* ══════════════════════════════════
+   AUTH
+══════════════════════════════════ */
+let currentUser = null;
+
+document.getElementById("btnLogin").addEventListener("click", doLogin);
+document.getElementById("loginPass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+
+async function doLogin(){
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginErr");
+  err.textContent = "";
+  document.getElementById("btnLogin").textContent = "Logging in…";
+  try {
+    const data = await apiFetch("/login", {method:"POST", body:JSON.stringify({username:u, password:p})});
+    if(data.error){ err.textContent = data.error; document.getElementById("btnLogin").textContent="Login"; return; }
+    authToken = data.token;
+    currentUser = {username:u, name:data.name, role:data.role, lecturerId:data.lecturerId||null};
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("appPage").style.display="block";
+    document.getElementById("btnLogin").textContent="Login";
+    await bootApp();
+  } catch(e) {
+    err.textContent = "Cannot connect to server. Make sure server.py is running.";
+    document.getElementById("btnLogin").textContent="Login";
+  }
+}
+
+document.getElementById("userChip").addEventListener("click", async ()=>{
+  if(!confirm("Log out?")) return;
+  if(authToken) await apiFetch("/logout",{method:"POST"}).catch(()=>{});
+  authToken=null; currentUser=null;
+  document.getElementById("loginPage").style.display="flex";
+  document.getElementById("appPage").style.display="none";
+  document.getElementById("chatBtn").style.display="none";
+  document.getElementById("chatPanel").classList.remove("open");
+  document.getElementById("loginUser").value="";
+  document.getElementById("loginPass").value="";
+  document.getElementById("loginErr").textContent="";
+});
+
+/* ══════════════════════════════════
+   BOOT
+══════════════════════════════════ */
+async function bootApp(){
+  const isAdmin = currentUser.role==="admin";
+  document.getElementById("chatBtn").style.display = "flex";
+  document.getElementById("userChipName").textContent = currentUser.name;
+  document.getElementById("userChipRole").textContent = isAdmin?"Admin":"Lecturer";
+  document.querySelectorAll(".admin-only").forEach(el=>el.style.display=isAdmin?"":"none");
+  if(isAdmin){ document.getElementById("actHead").textContent="Actions"; document.getElementById("sadActHead").textContent="Actions"; document.getElementById("nsActHead").textContent="Actions"; }
+
+  const now=new Date();
+  document.getElementById("dateDisplay").innerHTML=
+    now.toLocaleDateString("en-MY",{weekday:"long",year:"numeric",month:"long",day:"numeric"})+
+    "<br>"+now.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});
+
+  // Load all data from DB
+  const [lecs, anns, tsk] = await Promise.all([
+    apiFetch("/lecturers"),
+    apiFetch("/announcements"),
+    apiFetch("/tasks")
+  ]);
+  lecturers = lecs.map(normalise);
+  announcements = anns;
+  tasks = tsk;
+  nextId = lecturers.length ? Math.max(...lecturers.map(l=>l.id))+1 : 1;
+
+  initSidebar();
+  renderDashboard();
+  renderProgrammeTable("SAD","sadTableBody");
+  renderProgrammeTable("NS","nsTableBody");
+  renderAnnouncements();
+}
+
+// Normalise DB snake_case -> camelCase
+function normalise(r){
+  return {
+    id: r.id, name: r.name,
+    staffId: r.staff_id || r.staffId,
+    username: r.username, password: r.password,
+    programme: r.programme, status: r.status,
+    remarks: r.remarks||"",
+    statusUpdatedAt: r.status_updated_at || r.statusUpdatedAt || ""
+  };
+}
+
+/* ══════════════════════════════════
+   SIDEBAR
+══════════════════════════════════ */
+let sidebarOpen = window.innerWidth>760;
+function setSidebar(open){
+  sidebarOpen=open;
+  const sb=document.getElementById("sidebar"), mc=document.getElementById("mainContent"), ov=document.getElementById("overlay");
+  if(window.innerWidth<=760){ sb.classList.toggle("open",open); ov.classList.toggle("show",open); }
+  else{ sb.classList.toggle("collapsed",!open); mc.classList.toggle("full",!open); }
+}
+function initSidebar(){
+  document.getElementById("menuToggle").onclick=()=>setSidebar(!sidebarOpen);
+  document.getElementById("overlay").onclick=()=>setSidebar(false);
+  document.querySelectorAll(".nav-item").forEach(item=>{
+    item.onclick=function(){
+      document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+      this.classList.add("active");
+      const pg=this.dataset.page;
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      document.getElementById("page-"+pg).classList.add("active");
+      if(window.innerWidth<=760) setSidebar(false);
+      if(pg==="chart") renderLargeChart();
+      if(pg==="tasks") renderTasksPage();
+      if(pg==="sad") renderProgrammeTable("SAD","sadTableBody");
+      if(pg==="ns") renderProgrammeTable("NS","nsTableBody");
+    };
+  });
+  // prog tabs on dashboard
+  document.querySelectorAll(".prog-tab").forEach(tab=>{
+    tab.onclick=function(){
+      document.querySelectorAll(".prog-tab").forEach(t=>t.classList.remove("active"));
+      this.classList.add("active");
+      renderDashboardTable(this.dataset.prog);
+    };
+  });
+}
+
+/* ══════════════════════════════════
+   HELPERS
+══════════════════════════════════ */
+function badgeHTML(status){
+  const m=STATUS_META[status];
+  return `<span class="status-badge ${m.cls}"><span class="status-dot"></span>${m.label}</span>`;
+}
+function getCounts(list){
+  const c={class:0,outstation:0,leave:0,available:0,wbh:0};
+  list.forEach(l=>c[l.status]++);
+  return c;
+}
+function ts(){
+  const n=new Date();
+  return n.toLocaleDateString("en-MY",{day:"2-digit",month:"short",year:"numeric"})+" "+n.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});
+}
+function updateSummaryCounts(){
+  const c=getCounts(lecturers);
+  document.getElementById("totalCount").textContent=lecturers.length;
+  document.getElementById("classCount").textContent=c.class;
+  document.getElementById("outstationCount").textContent=c.outstation;
+  document.getElementById("leaveCount").textContent=c.leave;
+  document.getElementById("availableCount").textContent=c.available;
+  document.getElementById("wbhCount").textContent=c.wbh;
+  document.getElementById("lastUpdated").textContent="Last updated: "+new Date().toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+
+/* ══════════════════════════════════
+   PIE CHART
+══════════════════════════════════ */
+function drawPie(svgId, legendId, size, list){
+  const svg=document.getElementById(svgId), legend=document.getElementById(legendId);
+  if(!svg||!legend) return;
+  const counts=getCounts(list), total=list.length;
+  const cx=size/2, cy=size/2, r=size*0.42;
+  svg.innerHTML=""; legend.innerHTML="";
+  if(total===0) return;
+  let ang=-Math.PI/2;
+  ["class","outstation","leave","available","wbh"].forEach(key=>{
+    const val=counts[key]; if(!val) return;
+    const slice=(val/total)*2*Math.PI, end=ang+slice;
+    const x1=cx+r*Math.cos(ang), y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(end), y2=cy+r*Math.sin(end);
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${slice>Math.PI?1:0},1 ${x2},${y2} Z`);
+    path.setAttribute("fill",STATUS_META[key].color); path.setAttribute("stroke","#fff"); path.setAttribute("stroke-width","2");
+    svg.appendChild(path); ang=end;
+  });
+  const hole=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  hole.setAttribute("cx",cx); hole.setAttribute("cy",cy); hole.setAttribute("r",r*0.5); hole.setAttribute("fill","#fff");
+  svg.appendChild(hole);
+  const txt=document.createElementNS("http://www.w3.org/2000/svg","text");
+  txt.setAttribute("x",cx); txt.setAttribute("y",cy+2); txt.setAttribute("text-anchor","middle"); txt.setAttribute("dominant-baseline","middle");
+  txt.setAttribute("font-size",size<200?"13":"16"); txt.setAttribute("font-weight","700"); txt.setAttribute("fill","#1f2328"); txt.textContent=total;
+  svg.appendChild(txt);
+  const sub=document.createElementNS("http://www.w3.org/2000/svg","text");
+  sub.setAttribute("x",cx); sub.setAttribute("y",cy+(size<200?17:22)); sub.setAttribute("text-anchor","middle");
+  sub.setAttribute("font-size",size<200?"9":"11"); sub.setAttribute("fill","#57606a"); sub.textContent="lecturers";
+  svg.appendChild(sub);
+  ["class","outstation","leave","available","wbh"].forEach(key=>{
+    const val=counts[key], pct=Math.round((val/total)*100);
+    const row=document.createElement("div"); row.className="pie-legend-item";
+    row.innerHTML=`<div class="pie-legend-dot" style="background:${STATUS_META[key].color}"></div><span class="pie-legend-label">${STATUS_META[key].label}</span><span class="pie-legend-val">${val}</span><span class="pie-legend-pct">(${pct}%)</span>`;
+    legend.appendChild(row);
+  });
+}
+function renderLargeChart(){
+  drawPie("pieChartLarge","pieLegendLarge",240,lecturers);
+  const bd=document.getElementById("barBreakdown"); bd.innerHTML="";
+  const c=getCounts(lecturers);
+  ["class","outstation","leave","available","wbh"].forEach(key=>{
+    const val=c[key], pct=lecturers.length?Math.round((val/lecturers.length)*100):0;
+    bd.innerHTML+=`<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:600">${STATUS_META[key].label}</span><span style="font-size:13px;color:#57606a">${val} / ${lecturers.length}</span></div><div style="background:#f0f2f5;border-radius:6px;height:10px;overflow:hidden"><div style="background:${STATUS_META[key].color};height:100%;width:${pct}%;border-radius:6px;transition:width .4s"></div></div></div>`;
+  });
+}
+
+/* ══════════════════════════════════
+   DASHBOARD TABLE
+══════════════════════════════════ */
+let dashFilter="all";
+function renderDashboard(){
+  updateSummaryCounts();
+  renderDashboardTable(dashFilter);
+  drawPie("pieChart","pieLegend",180,lecturers);
+}
+function renderDashboardTable(prog){
+  dashFilter=prog;
+  const isAdmin=currentUser.role==="admin";
+  const list=prog==="all"?lecturers:lecturers.filter(l=>l.programme===prog);
+  const tbody=document.getElementById("dashTableBody"); tbody.innerHTML="";
+  list.forEach((l,i)=>{
+    const canEdit=isAdmin||(currentUser.role==="lecturer"&&currentUser.lecturerId===l.id);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><div class="lecturer-no">${i+1}</div></td>
+      <td><div class="lecturer-info"><div><div class="lecturer-name">${l.name}</div><div class="lecturer-id">${l.staffId}</div></div></div></td>
+      <td><span style="font-size:11px;background:${l.programme==="SAD"?"#eff6ff":"#f0fdf4"};color:${l.programme==="SAD"?"#1d4ed8":"#15803d"};padding:2px 8px;border-radius:10px;font-weight:600">${l.programme}</span></td>
+      <td>
+        ${canEdit
+          ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="dbadge-${l.id}">${badgeHTML(l.status)}${l.statusUpdatedAt?`<div style="font-size:10px;color:#57606a;margin-top:3px">🕐 ${l.statusUpdatedAt}</div>`:""}</div>
+             <select id="dsel-${l.id}" data-id="${l.id}">
+               <option value="class" ${l.status==="class"?"selected":""}>📚 In Class</option>
+               <option value="outstation" ${l.status==="outstation"?"selected":""}>✈️ Outstation</option>
+               <option value="leave" ${l.status==="leave"?"selected":""}>🏖️ On Leave</option>
+               <option value="available" ${l.status==="available"?"selected":""}>💼 Available</option>
+               <option value="wbh" ${l.status==="wbh"?"selected":""}>🏠 WBH</option>
+             </select></div>`
+          : badgeHTML(l.status)}
+      </td>
+      <td class="note-cell"><input type="text" data-id="${l.id}" placeholder="Remark…" value="${l.remarks||""}" ${canEdit?"":"readonly style='background:#f7f8fa;cursor:default'"}></td>
+      ${isAdmin?`<td style="white-space:nowrap"><button class="btn btn-warning btn-sm" data-id="${l.id}" data-action="edit">Edit</button> <button class="btn btn-danger btn-sm" data-id="${l.id}" data-action="delete">Delete</button></td>`:"<td></td>"}
+    `;
+    tbody.appendChild(tr);
+    if(canEdit){
+      tr.querySelector(`#dsel-${l.id}`).addEventListener("change",function(){ updateStatus(parseInt(this.dataset.id),this.value); });
+      tr.querySelector(".note-cell input").addEventListener("change",function(){ updateRemarks(parseInt(this.dataset.id),this.value); });
+    }
+    if(isAdmin){
+      tr.querySelectorAll("[data-action]").forEach(btn=>{
+        btn.addEventListener("click",function(){
+          if(this.dataset.action==="edit") openEditModal(parseInt(this.dataset.id));
+          else openDeleteConfirm(parseInt(this.dataset.id));
+        });
+      });
+    }
+  });
+}
+
+/* ══════════════════════════════════
+   PROGRAMME TABLE (SAD / NS)
+══════════════════════════════════ */
+function renderProgrammeTable(prog, tbodyId){
+  const isAdmin=currentUser.role==="admin";
+  const list=lecturers.filter(l=>l.programme===prog);
+  const tbody=document.getElementById(tbodyId); tbody.innerHTML="";
+  list.forEach((l,i)=>{
+    const canEdit=isAdmin||(currentUser.role==="lecturer"&&currentUser.lecturerId===l.id);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><div class="lecturer-no">${i+1}</div></td>
+      <td><div class="lecturer-info"><div><div class="lecturer-name">${l.name}</div><div class="lecturer-id">${l.staffId}</div></div></div></td>
+      <td>
+        ${canEdit
+          ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="pbadge-${l.id}">${badgeHTML(l.status)}${l.statusUpdatedAt?`<div style="font-size:10px;color:#57606a;margin-top:3px">🕐 ${l.statusUpdatedAt}</div>`:""}</div>
+             <select id="psel-${l.id}" data-id="${l.id}">
+               <option value="class" ${l.status==="class"?"selected":""}>📚 In Class</option>
+               <option value="outstation" ${l.status==="outstation"?"selected":""}>✈️ Outstation</option>
+               <option value="leave" ${l.status==="leave"?"selected":""}>🏖️ On Leave</option>
+               <option value="available" ${l.status==="available"?"selected":""}>💼 Available</option>
+               <option value="wbh" ${l.status==="wbh"?"selected":""}>🏠 WBH</option>
+             </select></div>`
+          : badgeHTML(l.status)}
+      </td>
+      <td class="note-cell"><input type="text" data-id="${l.id}" placeholder="Remark…" value="${l.remarks||""}" ${canEdit?"":"readonly style='background:#f7f8fa;cursor:default'"}></td>
+      ${isAdmin?`<td style="white-space:nowrap"><button class="btn btn-warning btn-sm" data-id="${l.id}" data-action="edit">Edit</button> <button class="btn btn-danger btn-sm" data-id="${l.id}" data-action="delete">Delete</button></td>`:"<td></td>"}
+    `;
+    tbody.appendChild(tr);
+    if(canEdit){
+      const sel=tr.querySelector(`#psel-${l.id}`);
+      if(sel) sel.addEventListener("change",function(){ updateStatus(parseInt(this.dataset.id),this.value); });
+      tr.querySelector(".note-cell input").addEventListener("change",function(){ updateRemarks(parseInt(this.dataset.id),this.value); });
+    }
+    if(isAdmin){
+      tr.querySelectorAll("[data-action]").forEach(btn=>{
+        btn.addEventListener("click",function(){
+          if(this.dataset.action==="edit") openEditModal(parseInt(this.dataset.id));
+          else openDeleteConfirm(parseInt(this.dataset.id));
+        });
+      });
+    }
+  });
+}
+
+/* ══════════════════════════════════
+   STATUS / REMARKS UPDATE
+══════════════════════════════════ */
+async function updateStatus(id, val){
+  const l=lecturers.find(x=>x.id===id); if(!l) return;
+  const updated = await apiFetch("/lecturers/"+id, {method:"PUT", body:JSON.stringify({status:val})});
+  Object.assign(l, normalise(updated));
+  ["dbadge-","pbadge-"].forEach(pfx=>{
+    const el=document.getElementById(pfx+id);
+    if(el) el.innerHTML=badgeHTML(l.status)+`<div style="font-size:10px;color:#57606a;margin-top:3px">🕐 ${l.statusUpdatedAt}</div>`;
+  });
+  updateSummaryCounts();
+  drawPie("pieChart","pieLegend",180,lecturers);
+}
+async function updateRemarks(id, val){
+  const l=lecturers.find(x=>x.id===id); if(!l) return;
+  await apiFetch("/lecturers/"+id, {method:"PUT", body:JSON.stringify({remarks:val})});
+  l.remarks=val;
+}
+
+/* ══════════════════════════════════
+   ADMIN CRUD MODAL
+══════════════════════════════════ */
+let editingId=null;
+function openAddModal(defaultProg){
+  editingId=null;
+  document.getElementById("modalTitle").textContent="Add Lecturer";
+  document.getElementById("mName").value="";
+  document.getElementById("mStaffId").value="PTSS-JTMK-0"+(nextId<10?"0":"")+nextId;
+  document.getElementById("mUsername").value="";
+  document.getElementById("mPassword").value="";
+  document.getElementById("mProg").value=defaultProg||"SAD";
+  document.getElementById("mStatus").value="available";
+  document.getElementById("lecturerModal").classList.add("open");
+}
+function openEditModal(id){
+  const l=lecturers.find(x=>x.id===id); if(!l) return;
+  editingId=id;
+  document.getElementById("modalTitle").textContent="Edit Lecturer";
+  document.getElementById("mName").value=l.name;
+  document.getElementById("mStaffId").value=l.staffId;
+  document.getElementById("mUsername").value=l.username;
+  document.getElementById("mPassword").value=l.password;
+  document.getElementById("mProg").value=l.programme;
+  document.getElementById("mStatus").value=l.status;
+  document.getElementById("lecturerModal").classList.add("open");
+}
+function closeModal(){ document.getElementById("lecturerModal").classList.remove("open"); }
+
+document.getElementById("btnModalCancel").addEventListener("click", closeModal);
+document.getElementById("btnModalSave").addEventListener("click", async ()=>{
+  const name=document.getElementById("mName").value.trim();
+  const staffId=document.getElementById("mStaffId").value.trim();
+  const username=document.getElementById("mUsername").value.trim();
+  const password=document.getElementById("mPassword").value.trim();
+  const programme=document.getElementById("mProg").value;
+  const status=document.getElementById("mStatus").value;
+  if(!name||!staffId||!username||!password){ alert("All fields are required."); return; }
+  if(editingId===null){
+    const added = await apiFetch("/lecturers",{method:"POST",body:JSON.stringify({name,staffId,username,password,programme,status})});
+    if(added.error){ alert(added.error); return; }
+    lecturers.push(normalise(added));
+  } else {
+    const updated = await apiFetch("/lecturers/"+editingId,{method:"PUT",body:JSON.stringify({name,staffId,username,password,programme,status})});
+    if(updated.error){ alert(updated.error); return; }
+    const idx=lecturers.findIndex(x=>x.id===editingId);
+    if(idx>=0) lecturers[idx]=normalise(updated);
+  }
+  nextId = Math.max(...lecturers.map(l=>l.id))+1;
+  closeModal();
+  renderDashboard();
+  renderProgrammeTable("SAD","sadTableBody");
+  renderProgrammeTable("NS","nsTableBody");
+});
+document.getElementById("btnAddSAD").addEventListener("click",()=>openAddModal("SAD"));
+document.getElementById("btnAddNS").addEventListener("click",()=>openAddModal("NS"));
+document.getElementById("btnAddDash").addEventListener("click",()=>openAddModal("SAD"));
+
+/* ══════════════════════════════════
+   DELETE CONFIRM
+══════════════════════════════════ */
+let deleteId=null;
+function openDeleteConfirm(id){
+  const l=lecturers.find(x=>x.id===id); if(!l) return;
+  deleteId=id;
+  document.getElementById("confirmName").textContent=l.name;
+  document.getElementById("confirmModal").classList.add("open");
+}
+document.getElementById("btnConfirmCancel").addEventListener("click",()=>{ document.getElementById("confirmModal").classList.remove("open"); deleteId=null; });
+document.getElementById("btnConfirmDelete").addEventListener("click", async ()=>{
+  await apiFetch("/lecturers/"+deleteId,{method:"DELETE"});
+  lecturers=lecturers.filter(x=>x.id!==deleteId);
+  document.getElementById("confirmModal").classList.remove("open");
+  deleteId=null;
+  renderDashboard();
+  renderProgrammeTable("SAD","sadTableBody");
+  renderProgrammeTable("NS","nsTableBody");
+});
+
+/* ══════════════════════════════════
+   ANNOUNCEMENTS
+══════════════════════════════════ */
+function renderAnnouncements(){
+  const isAdmin=currentUser.role==="admin";
+  ["annList","annList2"].forEach((lid,li)=>{
+    const list=document.getElementById(lid);
+    const empty=document.getElementById(li===0?"annEmpty":"annEmpty2");
+    list.querySelectorAll(".ann-item").forEach(el=>el.remove());
+    if(!announcements.length){ empty.style.display=""; return; }
+    empty.style.display="none";
+    announcements.forEach((ann,idx)=>{
+      const div=document.createElement("div"); div.className="ann-item";
+      div.innerHTML=`<div class="ann-body"><div class="ann-text">${ann.text.replace(/</g,"&lt;")}</div><div class="ann-meta">Posted on ${ann.date}</div></div>${isAdmin?`<button class="btn-del" data-id="${ann.id}">×</button>`:""}`;
+      if(isAdmin) div.querySelector(".btn-del").addEventListener("click", async function(){
+        await apiFetch("/announcements/"+this.dataset.id,{method:"DELETE"});
+        announcements=announcements.filter(a=>a.id!==parseInt(this.dataset.id));
+        renderAnnouncements();
+      });
+      list.appendChild(div);
+    });
+  });
+}
+function setupAnnForm(toggleId,formId,inputId,cancelId){
+  const tog=document.getElementById(toggleId);
+  if(!tog) return;
+  tog.addEventListener("click",function(){ const f=document.getElementById(formId); f.classList.toggle("open"); if(f.classList.contains("open")) document.getElementById(inputId).focus(); });
+  document.getElementById(cancelId).addEventListener("click",function(){ document.getElementById(formId).classList.remove("open"); document.getElementById(inputId).value=""; });
+  document.getElementById(formId).addEventListener("submit", async function(e){
+    e.preventDefault();
+    const text=document.getElementById(inputId).value.trim(); if(!text) return;
+    const added = await apiFetch("/announcements",{method:"POST",body:JSON.stringify({text})});
+    announcements.unshift(added);
+    renderAnnouncements();
+    document.getElementById(inputId).value=""; document.getElementById(formId).classList.remove("open");
+  });
+}
+setupAnnForm("btnToggleAnn","annForm","annInput","btnAnnCancel");
+setupAnnForm("btnToggleAnn2","annForm2","annInput2","btnAnnCancel2");
+
+/* ══════════════════════════════════
+   CHATBOT
+══════════════════════════════════ */
+const QUICK=["Who is in class?","Who is on leave?","Who is outstation?","Who is available?","How many SAD?","How many NS?","Show announcements","Help"];
+let chatOpened=false;
+document.getElementById("chatBtn").addEventListener("click",()=>{ chatOpened=!chatOpened; document.getElementById("chatPanel").classList.toggle("open",chatOpened); document.getElementById("chatBtn").textContent=chatOpened?"✕":"💬"; if(chatOpened&&!document.getElementById("chatMessages").children.length){botMsg("Hi! 👋 I'm the JTMK Assistant. Ask me anything about lecturer status or announcements.");renderQR();} });
+document.getElementById("chatClose").addEventListener("click",()=>{ chatOpened=false; document.getElementById("chatPanel").classList.remove("open"); document.getElementById("chatBtn").textContent="💬"; });
+function botMsg(t){ const w=document.createElement("div"); w.className="msg bot"; w.innerHTML=`<div class="msg-avatar">🤖</div><div class="msg-bubble">${t}</div>`; document.getElementById("chatMessages").appendChild(w); document.getElementById("chatMessages").scrollTop=9999; }
+function userMsg(t){ const w=document.createElement("div"); w.className="msg user"; w.innerHTML=`<div class="msg-bubble">${t}</div><div class="msg-avatar" style="background:#1e3a5f">👤</div>`; document.getElementById("chatMessages").appendChild(w); document.getElementById("chatMessages").scrollTop=9999; }
+function renderQR(){ const qr=document.getElementById("quickReplies"); qr.innerHTML=""; QUICK.forEach(q=>{ const b=document.createElement("button"); b.className="qr-btn"; b.textContent=q; b.onclick=()=>handleQ(q); qr.appendChild(b); }); }
+function handleQ(raw){
+  userMsg(raw); document.getElementById("quickReplies").innerHTML="";
+  const q=raw.toLowerCase(); let r="";
+  const byStatus=s=>lecturers.filter(l=>l.status===s).map(l=>`• ${l.name} (${l.programme})`).join("<br>");
+  if(/how many/.test(q)&&/sad/.test(q)){ const n=lecturers.filter(l=>l.programme==="SAD").length; r=`💻 SAD has <b>${n}</b> lecturer(s).`; }
+  else if(/how many/.test(q)&&/ns/.test(q)){ const n=lecturers.filter(l=>l.programme==="NS").length; r=`🌐 NS has <b>${n}</b> lecturer(s).`; }
+  else if(/how many|total|count/.test(q)){ const c=getCounts(lecturers); r=`📊 <b>Total: ${lecturers.length}</b><br>📚 In Class: <b>${c.class}</b><br>✈️ Outstation: <b>${c.outstation}</b><br>🏖️ On Leave: <b>${c.leave}</b><br>💼 Available: <b>${c.available}</b><br>🏠 WBH: <b>${c.wbh}</b>`; }
+  else if(/in class|teaching/.test(q)){ const n=byStatus("class"); r=n?`📚 <b>In Class:</b><br>${n}`:"No lecturers in class."; }
+  else if(/on leave|leave/.test(q)){ const n=byStatus("leave"); r=n?`🏖️ <b>On Leave:</b><br>${n}`:"No lecturers on leave."; }
+  else if(/outstation/.test(q)){ const n=byStatus("outstation"); r=n?`✈️ <b>Outstation:</b><br>${n}`:"No lecturers outstation."; }
+  else if(/available|office/.test(q)){ const n=byStatus("available"); r=n?`💼 <b>Available:</b><br>${n}`:"No lecturers available."; }
+  else if(/announcement|notice/.test(q)){ r=announcements.length?`📢 <b>${announcements.length} announcement(s):</b><br>`+announcements.slice(0,3).map(a=>`• ${a.text}`).join("<br>"):"📢 No announcements."; }
+  else if(/hi|hello|hey/.test(q)){ r="Hi there! 👋 How can I help you?"; }
+  else if(/help/.test(q)){ r="You can ask:<br>• Who is in class / on leave / outstation?<br>• How many SAD / NS?<br>• Show announcements<br>• Lecturer name"; }
+  else {
+    const found=lecturers.find(l=>l.name.toLowerCase().includes(q)||q.includes(l.name.toLowerCase().split(" ").pop()));
+    if(found){ r=`👤 <b>${found.name}</b><br>Staff ID: ${found.staffId}<br>Programme: ${found.programme}<br>Status: ${STATUS_META[found.status].label}`; }
+    else{ r="🤔 I'm not sure. Try asking about a lecturer name or status."; }
+  }
+  setTimeout(()=>{ botMsg(r); renderQR(); },300);
+}
+document.getElementById("chatSend").addEventListener("click",()=>{ const t=document.getElementById("chatInput").value.trim(); if(!t) return; document.getElementById("chatInput").value=""; handleQ(t); });
+document.getElementById("chatInput").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("chatSend").click(); });
+
+/* ══════════════════════════════════
+   TUGAS SAMPINGAN
+══════════════════════════════════ */
+function getInitials(name){
+  const parts = name.replace(/^(Ts\.|Dr\.|Pn\.|En\.|Prof\.)\s*/i,"").trim().split(" ");
+  return parts.slice(0,2).map(w=>w[0]).join("").toUpperCase();
+}
+
+function renderTasksPage(){
+  const isAdmin = currentUser.role==="admin";
+  const grid = document.getElementById("tasksGrid");
+  grid.innerHTML = "";
+  lecturers.forEach(l=>{
+    const ltasks = tasks[l.id] || [];
+    const progColor = l.programme==="SAD" ? "#1d4ed8" : "#15803d";
+    const progBg    = l.programme==="SAD" ? "#eff6ff"  : "#f0fdf4";
+
+    const card = document.createElement("div");
+    card.className = "task-card";
+    card.innerHTML = `
+      <div class="task-card-header">
+        <div class="task-card-avatar">${getInitials(l.name)}</div>
+        <div>
+          <div class="task-card-name">${l.name}</div>
+          <div class="task-card-sub">
+            <span style="background:${progBg};color:${progColor};padding:1px 7px;border-radius:9px;font-weight:600;font-size:10px">${l.programme}</span>
+            &nbsp;${l.staffId}
+          </div>
+        </div>
+      </div>
+      <div class="task-list" id="tlist-${l.id}">
+        ${ltasks.length
+          ? ltasks.map((t,i)=>`<div class="task-item"><div class="task-item-num">${i+1}</div><div class="task-item-text">${t.replace(/</g,"&lt;")}</div></div>`).join("")
+          : `<div class="task-empty">No tasks assigned.</div>`}
+      </div>
+      <div class="task-card-footer">
+        <span style="font-size:11px;color:#adb5bd;margin-right:auto">${ltasks.length}/5 tasks</span>
+        ${isAdmin ? `<button class="btn btn-primary btn-sm" data-lid="${l.id}">✏️ Edit Tasks</button>` : ""}
+      </div>
+    `;
+    if(isAdmin){
+      card.querySelector("[data-lid]").addEventListener("click",function(){
+        openTaskModal(parseInt(this.dataset.lid));
+      });
+    }
+    grid.appendChild(card);
+  });
+}
+
+let editingTaskLecId = null;
+
+function openTaskModal(lecId){
+  const l = lecturers.find(x=>x.id===lecId);
+  if(!l) return;
+  editingTaskLecId = lecId;
+  document.getElementById("taskModalTitle").textContent = "Tugas Sampingan";
+  document.getElementById("taskModalLecName").textContent = "👤 " + l.name + " (" + l.programme + ")";
+  const ltasks = tasks[lecId] || [];
+  const fields = document.getElementById("taskFields");
+  fields.innerHTML = "";
+  for(let i=0;i<5;i++){
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:10px";
+    wrap.innerHTML = `
+      <div style="width:22px;height:22px;border-radius:50%;background:#3b82d4;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+      <input type="text" class="task-input" placeholder="Task ${i+1} (leave blank to remove)" value="${(ltasks[i]||"").replace(/"/g,"&quot;")}" style="flex:1;border:1px solid #e5e7eb;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#f7f8fa;outline:none"/>
+    `;
+    wrap.querySelector("input").addEventListener("focus",function(){ this.style.borderColor="#3b82d4"; this.style.background="#fff"; });
+    wrap.querySelector("input").addEventListener("blur",function(){ this.style.borderColor="#e5e7eb"; this.style.background="#f7f8fa"; });
+    fields.appendChild(wrap);
+  }
+  document.getElementById("taskModal").classList.add("open");
+}
+
+document.getElementById("btnTaskCancel").addEventListener("click",()=>{
+  document.getElementById("taskModal").classList.remove("open");
+  editingTaskLecId = null;
+});
+
+document.getElementById("btnTaskSave").addEventListener("click", async ()=>{
+  if(editingTaskLecId===null) return;
+  const inputs = document.querySelectorAll("#taskFields .task-input");
+  const saved = [];
+  inputs.forEach(inp=>{ const v=inp.value.trim(); if(v) saved.push(v); });
+  await apiFetch("/tasks",{method:"POST",body:JSON.stringify({lecturerId:editingTaskLecId, tasks:saved})});
+  tasks[editingTaskLecId] = saved;
+  document.getElementById("taskModal").classList.remove("open");
+  editingTaskLecId = null;
+  renderTasksPage();
+});
+
+/* ══════════════════════════════════
+   PRINT REPORTS
+══════════════════════════════════ */
+function printReport(type){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-MY",{weekday:"long",year:"numeric",month:"long",day:"numeric"})
+                + " " + now.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});
+
+  const headerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:18px;border-bottom:2px solid #1e3a5f">
+      <img src="jtmk.png" style="width:60px;height:60px;object-fit:contain" onerror="this.style.display='none'"/>
+      <div>
+        <div style="font-size:18px;font-weight:700;color:#1e3a5f">JTMK PTSS Lecturer Status Dashboard</div>
+        <div style="font-size:12px;color:#57606a">Jabatan Teknologi Maklumat &amp; Komunikasi — Politeknik Tuanku Syed Sirajuddin</div>
+        <div style="font-size:11px;color:#adb5bd;margin-top:2px">Generated: ${dateStr}</div>
+      </div>
+    </div>`;
+
+  let bodyHTML = "";
+
+  if(type==="status" || type==="all"){
+    const sadList = lecturers.filter(l=>l.programme==="SAD");
+    const nsList  = lecturers.filter(l=>l.programme==="NS");
+    const makeTable = (list, prog) => `
+      <h3 style="font-size:13px;font-weight:700;color:#1e3a5f;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px">${prog} — ${prog==="SAD"?"Software &amp; Application Development":"Networking System"}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#f0f2f5">
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">#</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Name</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Staff ID</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Status</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Last Updated</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map((l,i)=>{
+            const statusColors={class:"#15803d",outstation:"#a16207",leave:"#b91c1c",available:"#0369a1",wbh:"#7c3aed"};
+            const statusLabels={class:"In Class",outstation:"Outstation",leave:"On Leave",available:"Available",wbh:"WBH"};
+            return `<tr style="border:1px solid #e5e7eb">
+              <td style="padding:6px 10px;border:1px solid #e5e7eb">${i+1}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600">${l.name}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb">${l.staffId}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;color:${statusColors[l.status]||"#1f2328"};font-weight:600">${statusLabels[l.status]||l.status}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;color:#57606a">${l.statusUpdatedAt||"—"}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb">${l.remarks||"—"}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    bodyHTML += `<h2 style="font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Lecturer Status Report</h2>`;
+    bodyHTML += makeTable(sadList,"SAD") + makeTable(nsList,"NS");
+  }
+
+  if(type==="tasks" || type==="all"){
+    if(type==="all") bodyHTML += `<div style="page-break-before:always"></div>`;
+    bodyHTML += `<h2 style="font-size:15px;font-weight:700;color:#1e3a5f;margin:${type==="all"?"18px":0} 0 4px">Tugas Sampingan Report</h2>`;
+    const sadList = lecturers.filter(l=>l.programme==="SAD");
+    const nsList  = lecturers.filter(l=>l.programme==="NS");
+    const makeTaskTable = (list, prog) => `
+      <h3 style="font-size:13px;font-weight:700;color:#1e3a5f;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px">${prog} — ${prog==="SAD"?"Software &amp; Application Development":"Networking System"}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#f0f2f5">
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">#</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Name</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Staff ID</th>
+            <th style="padding:7px 10px;text-align:left;border:1px solid #e5e7eb">Tugas Sampingan</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map((l,i)=>{
+            const ltasks = tasks[l.id]||[];
+            return `<tr style="border:1px solid #e5e7eb">
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;vertical-align:top">${i+1}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600;vertical-align:top">${l.name}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb;vertical-align:top">${l.staffId}</td>
+              <td style="padding:6px 10px;border:1px solid #e5e7eb">${ltasks.length
+                ? ltasks.map((t,ti)=>`<div style="margin-bottom:3px">${ti+1}. ${t}</div>`).join("")
+                : '<span style="color:#adb5bd;font-style:italic">No tasks assigned</span>'
+              }</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    bodyHTML += makeTaskTable(sadList,"SAD") + makeTaskTable(nsList,"NS");
+  }
+
+  const win = window.open("","_blank","width=900,height=700");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+    <title>JTMK PTSS Report</title>
+    <style>
+      body{font-family:-apple-system,"Segoe UI",sans-serif;color:#1f2328;margin:0;padding:28px 32px;font-size:13px}
+      @media print{
+        body{padding:10mm 12mm}
+        button{display:none!important}
+        @page{size:A4;margin:12mm}
+      }
+    </style>
+  </head><body>
+    ${headerHTML}
+    ${bodyHTML}
+    <div style="margin-top:28px;text-align:center">
+      <button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;padding:10px 28px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save as PDF</button>
+    </div>
+    <div style="margin-top:20px;font-size:10px;color:#adb5bd;text-align:center;border-top:1px solid #e5e7eb;padding-top:10px">JTMK PTSS Lecturer Status Dashboard — Developed by NZMG</div>
+  </body></html>`);
+  win.document.close();
+}
+
+document.getElementById("btnPrintStatus").addEventListener("click",()=>printReport("status"));
+document.getElementById("btnPrintTasks").addEventListener("click", ()=>printReport("tasks"));
+document.getElementById("btnPrintAll").addEventListener("click",  ()=>printReport("all"));
+</script>
+</body>
+</html>
